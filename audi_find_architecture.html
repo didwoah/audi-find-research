@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audi-Find Architecture</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-size: 11px;
+  padding: 24px;
+}
+
+.diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.layer {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: 6px;
+  overflow: visible;
+  position: relative;
+}
+
+.layer-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 8px 4px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px 0 0 4px;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.layer-content {
+  display: flex;
+  flex: 1;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 0 4px 4px 0;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.l-hw   .layer-label { background: #374151; }
+.l-hw   .layer-content { background: #f3f4f6; border: 1.5px solid #d1d5db; border-left: none; }
+
+.l-fw   .layer-label { background: #1e40af; }
+.l-fw   .layer-content { background: #eff6ff; border: 1.5px solid #bfdbfe; border-left: none; }
+
+.l-tr   .layer-label { background: #065f46; }
+.l-tr   .layer-content { background: #ecfdf5; border: 1.5px solid #a7f3d0; border-left: none; }
+
+.l-sp   .layer-label { background: #92400e; }
+.l-sp   .layer-content { background: #fffbeb; border: 1.5px solid #fde68a; border-left: none; }
+
+.l-cl   .layer-label { background: #6b21a8; }
+.l-cl   .layer-content { background: #faf5ff; border: 1.5px solid #e9d5ff; border-left: none; }
+
+.l-ui   .layer-label { background: #9f1239; }
+.l-ui   .layer-content { background: #fff1f2; border: 1.5px solid #fecdd3; border-left: none; }
+
+.comp {
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  border: 1.5px solid;
+  padding: 5px 8px;
+  min-width: 110px;
+  max-width: 160px;
+  position: relative;
+}
+
+.comp-title {
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+.comp-sub {
+  font-size: 9px;
+  opacity: 0.65;
+  line-height: 1.4;
+}
+.comp-tag {
+  font-size: 8px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.l-hw .comp { border-color: #9ca3af; background: #fff; }
+.l-hw .comp-title { color: #374151; }
+.l-hw .comp-tag { background: #374151; color: #fff; }
+
+.l-fw .comp { border-color: #93c5fd; background: #fff; }
+.l-fw .comp-title { color: #1e40af; }
+.l-fw .comp-tag { background: #1e40af; color: #fff; }
+
+.l-tr .comp { border-color: #6ee7b7; background: #fff; }
+.l-tr .comp-title { color: #065f46; }
+.l-tr .comp-tag { background: #065f46; color: #fff; }
+
+.l-sp .comp { border-color: #fcd34d; background: #fff; }
+.l-sp .comp-title { color: #92400e; }
+.l-sp .comp-tag { background: #92400e; color: #fff; }
+
+.l-cl .comp { border-color: #c4b5fd; background: #fff; }
+.l-cl .comp-title { color: #6b21a8; }
+.l-cl .comp-tag { background: #6b21a8; color: #fff; }
+
+.l-ui .comp { border-color: #fda4af; background: #fff; }
+.l-ui .comp-title { color: #9f1239; }
+.l-ui .comp-tag { background: #9f1239; color: #fff; }
+
+.data-flow {
+  font-size: 9px;
+  color: #6b7280;
+  padding: 2px 8px 2px 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.data-flow::before {
+  content: '↓';
+  font-size: 11px;
+  color: #9ca3af;
+}
+.data-flow .payload {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-size: 8.5px;
+  color: #374151;
+}
+
+.title-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #e5e7eb;
+}
+.title-bar h1 {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.3px;
+}
+.title-bar span {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.section-gap { margin-top: 4px; }
+
+.tee-wrapper {
+  border: 2px dashed #7c3aed;
+  border-radius: 6px;
+  padding: 4px;
+  position: relative;
+  margin-top: 4px;
+}
+.tee-badge {
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.inner-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.comp.highlight {
+  border-style: solid;
+  border-width: 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="diagram">
+
+  <div class="title-bar">
+    <h1>Audi-Find Architecture</h1>
+    <span>Developer View — 6 Layers</span>
+  </div>
+
+  <!-- LAYER 1: HARDWARE -->
+  <div class="layer l-hw">
+    <div class="layer-label">Hardware</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">ANC External Mic</div>
+        <div class="comp-sub">2개/이어버드<br>주변음 상시 수집</div>
+        <div class="comp-tag">INPUT</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">BES2700YP SoC</div>
+        <div class="comp-sub">Cortex-M55 (Helium)<br>HiFi4 DSP · BECO NPU<br>4MB SRAM · 12nm</div>
+        <div class="comp-tag">COMPUTE</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">LSM6DSV16BX</div>
+        <div class="comp-sub">6-axis IMU<br>가속도계 ±16g<br>자이로 ±2000 dps</div>
+        <div class="comp-tag">SENSOR</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">HW VAD Circuit</div>
+        <div class="comp-sub">Always-on ~1MHz<br>RMS 에너지 임계값<br>소비전류 ~10μW</div>
+        <div class="comp-tag">ALWAYS-ON</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">BLE Radio</div>
+        <div class="comp-sub">BLE 5.3 / 5.4<br>2M PHY · DLE<br>실내 유효 ~10m</div>
+        <div class="comp-tag">COMMS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-flow">
+    <span class="payload">Raw PCM  16kHz · 16-bit · mono  →  순환 버퍼 320KB</span>
+    <span>&nbsp;·&nbsp; RSSI 이벤트 · IMU 이벤트</span>
+  </div>
+
+  <!-- LAYER 2: BUDS FIRMWARE -->
+  <div class="layer l-fw section-gap">
+    <div class="layer-label">Buds Firmware</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">Circular Buffer</div>
+        <div class="comp-sub">10s PCM 슬라이딩<br>단절 시 freeze<br>SRAM 320KB</div>
+        <div class="comp-tag">BUFFER</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">Trigger Engine</div>
+        <div class="comp-sub">RSSI &lt; -70dBm<br>낙하 감지 · 착용 해제<br>1min/30s 주기 백업</div>
+        <div class="comp-tag">LOGIC</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">VAD Pipeline</div>
+        <div class="comp-sub">HW VAD → 1차 필터<br>HiFi4 WebRTC GMM → 2차<br>음성 프레임 마스킹 0.12ms</div>
+        <div class="comp-tag">PRIVACY</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">Mel-Spectrogram</div>
+        <div class="comp-sub">HiFi4 DSP · ~10ms<br>128ch · 25ms win · 10ms hop<br>float16 → 250KB</div>
+        <div class="comp-tag">DSP</div>
+      </div>
+      <div class="comp highlight">
+        <div class="comp-title">ECIES Encrypt</div>
+        <div class="comp-sub">임시 키쌍 (d_eph, P_eph)<br>ECDH → HKDF → AES-256-GCM<br>Cortex-M55 Helium ~5ms</div>
+        <div class="comp-tag">CRYPTO</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">Rolling Index</div>
+        <div class="comp-sub">A_i = KDF(SK, i)<br>Index_i = SHA-256(A_i)<br>32 bytes · 익명 식별자</div>
+        <div class="comp-tag">CRYPTO</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">BLE GATT Server</div>
+        <div class="comp-sub">광고: Index_i[:12] 31B<br>GATT: [Index|P_eph|C]<br>int8+LZ4 → ~94KB · 0.5s</div>
+        <div class="comp-tag">COMMS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-flow">
+    <span class="payload">BLE GATT  [ Index_i | P_eph | Ciphertext ]  ~94KB (int8+LZ4+DLE)  ~0.5s</span>
+  </div>
+
+  <!-- LAYER 3: TRANSPORT -->
+  <div class="layer l-tr section-gap">
+    <div class="layer-label">Transport</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">BLE 2M PHY + DLE</div>
+        <div class="comp-sub">패킷 페이로드 251B<br>효율 93.1%<br>유효 throughput ~1,400 Kbps</div>
+        <div class="comp-tag">BLE</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">Finder Upload</div>
+        <div class="comp-sub">주변 Galaxy 기기<br>Finder 신원 미포함<br>클라우드 업로드</div>
+        <div class="comp-tag">RELAY</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">TLS 1.3</div>
+        <div class="comp-sub">1-RTT · Forward Secrecy<br>SPKI cert pinning<br>스마트폰 ↔ 클라우드</div>
+        <div class="comp-tag">SECURE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-flow">
+    <span class="payload">HTTPS/TLS 1.3  [ Index_i | P_eph | C ]  →  Cloud Storage</span>
+    <span>&nbsp;|&nbsp;</span>
+    <span class="payload">Find 요청 시: Cloud → Phone  [ P_eph | C ]</span>
+  </div>
+
+  <!-- LAYER 4: SMARTPHONE -->
+  <div class="layer l-sp section-gap">
+    <div class="layer-label">Smartphone</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">Samsung Find App</div>
+        <div class="comp-sub">Find 요청 트리거<br>Index_i 목록 관리<br>결과 UI 렌더링</div>
+        <div class="comp-tag">APP</div>
+      </div>
+      <div class="comp highlight">
+        <div class="comp-title">ECIES Decrypt</div>
+        <div class="comp-sub">d_owner (로컬 보관)<br>ECDH(d_owner, P_eph)<br>→ HKDF → AES-256-GCM</div>
+        <div class="comp-tag">CRYPTO</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">GPS + Map API</div>
+        <div class="comp-sub">현재 GPS 좌표<br>반경 100m 후보 조회<br>Google Maps / Kakao</div>
+        <div class="comp-tag">CONTEXT</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">Key Manager</div>
+        <div class="comp-sub">SK_0 보관 (페어링 시 생성)<br>A_i 재계산 → Index_i<br>Samsung 계정 E2E 백업</div>
+        <div class="comp-tag">KEYSTORE</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-flow">
+    <span class="payload">TLS 1.3 + cert pinning  →  TEE vsock  [ Mel-Spectrogram (plaintext) | GPS candidates text ]</span>
+  </div>
+
+  <!-- LAYER 5: CLOUD -->
+  <div class="layer l-cl section-gap">
+    <div class="layer-label">Cloud</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">Blob Storage</div>
+        <div class="comp-sub">Key: Index_i<br>Value: [P_eph | C]<br>복호화 키 없음</div>
+        <div class="comp-tag">STORAGE</div>
+      </div>
+
+      <div class="tee-wrapper">
+        <div class="tee-badge">TEE · AWS Nitro Enclave</div>
+        <div class="inner-group">
+          <div class="comp highlight">
+            <div class="comp-title">AuT Encoder</div>
+            <div class="comp-sub">Qwen3.5-Omni-Plus<br>128ch Mel → 6.25Hz tokens<br>10s → ~62.5 tokens</div>
+            <div class="comp-tag">MODEL</div>
+          </div>
+          <div class="comp highlight">
+            <div class="comp-title">Hybrid MoE LLM</div>
+            <div class="comp-sub">Thinker (Chain-of-Thought)<br>Audio + GPS 후보 결합<br>MMAU 82.2%</div>
+            <div class="comp-tag">INFERENCE</div>
+          </div>
+          <div class="comp">
+            <div class="comp-title">Memory Wipe</div>
+            <div class="comp-sub">추론 완료 즉시<br>Mel-Spectrogram 삭제<br>원격 증명 가능</div>
+            <div class="comp-tag">PRIVACY</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="comp-title">Result API</div>
+        <div class="comp-sub">위치 추론 결과<br>자연어 + 좌표<br>TLS 1.3 반환</div>
+        <div class="comp-tag">API</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-flow">
+    <span class="payload">JSON  { location: "서울역 1호선 플랫폼", confidence: 0.87, reasoning: "..." }</span>
+  </div>
+
+  <!-- LAYER 6: UI -->
+  <div class="layer l-ui section-gap">
+    <div class="layer-label">UI / UX</div>
+    <div class="layer-content">
+      <div class="comp">
+        <div class="comp-title">지도 표시</div>
+        <div class="comp-sub">추론 위치 핀<br>GPS 후보 반경 오버레이<br>신뢰도 표시</div>
+        <div class="comp-tag">MAP</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">자연어 설명</div>
+        <div class="comp-sub">"서울역 1호선 플랫폼<br>가능성 높음 — 열차 도착음<br>및 안내방송 감지됨"</div>
+        <div class="comp-tag">NLU</div>
+      </div>
+      <div class="comp">
+        <div class="comp-title">삭제 API</div>
+        <div class="comp-sub">Index_i 목록 제시<br>클라우드 데이터 삭제<br>GDPR Art.17 대응</div>
+        <div class="comp-tag">GDPR</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
